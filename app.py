@@ -1,3 +1,12 @@
+@st.cache_data(ttl=300)
+def get_location():
+    import requests
+
+    try:
+        data = requests.get("https://ipapi.co/json").json()
+        return data.get("city", "Desconhecido"), data.get("country_name", "Desconhecido")
+    except:
+        return "Desconhecido", "Desconhecido"
 import sqlite3
 
 def criar_banco():
@@ -161,10 +170,7 @@ class Dashboard:
 # =========================
 # 🌍 LOCALIZAÇÃO
 # =========================
-class Geo:
 
-    @st.cache_data(ttl=300)
-    def get_location(self):
         try:
             data = requests.get("https://ipapi.co/json").json()
             return data["city"], data["country_name"]
@@ -198,8 +204,7 @@ class HessApp:
             return
 
         # LOCALIZAÇÃO
-        cidade, pais = self.geo.get_location()
-
+        cidade, pais = get_location()
         # SIDEBAR
         st.sidebar.title("⚙️ Configurações")
         st.session_state.tema = st.sidebar.radio("Tema", ["escuro", "claro"])
