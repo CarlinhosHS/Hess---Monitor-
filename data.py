@@ -17,7 +17,6 @@ def get_data():
         "x_t": valores
     })
     return df
-hess.py
 import numpy as np
 
 def aplicar_hess(df):
