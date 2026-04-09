@@ -1,3 +1,21 @@
+import sqlite3
+
+def criar_banco():
+    conn = sqlite3.connect("usuarios.db")
+    c = conn.cursor()
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user TEXT UNIQUE,
+        senha TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+criar_banco()
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -10,26 +28,63 @@ import plotly.express as px
 # 🔐 SISTEMA DE LOGIN
 # =========================
 class Auth:
+
     def __init__(self):
         if "logado" not in st.session_state:
             st.session_state.logado = False
 
-    def login(self):
-        st.title("🔐 Login HESS")
-        user = st.text_input("Usuário")
-        senha = st.text_input("Senha", type="password")
+    def cadastrar(self, user, senha):
+        conn = sqlite3.connect("usuarios.db")
+        c = conn.cursor()
 
-        if st.button("Entrar"):
-            if user == "admin" and senha == "123":
-                st.session_state.logado = True
-                st.success("Login realizado!")
-                st.rerun()
-            else:
-                st.error("Credenciais inválidas")
+        try:
+            c.execute("INSERT INTO usuarios (user, senha) VALUES (?, ?)", (user, senha))
+            conn.commit()
+            st.success("Usuário criado com sucesso!")
+        except:
+            st.error("Usuário já existe")
+
+        conn.close()
+
+    def login(self, user, senha):
+        conn = sqlite3.connect("usuarios.db")
+        c = conn.cursor()
+
+        c.execute("SELECT * FROM usuarios WHERE user=? AND senha=?", (user, senha))
+        result = c.fetchone()
+
+        conn.close()
+
+        if result:
+            st.session_state.logado = True
+            st.success("Login realizado!")
+            st.rerun()
+        else:
+            st.error("Credenciais inválidas")
+
+    def tela_login(self):
+        st.title("🔐 Login HESS")
+
+        aba1, aba2 = st.tabs(["Entrar", "Cadastrar"])
+
+        # LOGIN
+        with aba1:
+            user = st.text_input("Usuário", key="login_user")
+            senha = st.text_input("Senha", type="password", key="login_senha")
+
+            if st.button("Entrar"):
+                self.login(user, senha)
+
+        # CADASTRO
+        with aba2:
+            new_user = st.text_input("Novo usuário", key="cad_user")
+            new_senha = st.text_input("Nova senha", type="password", key="cad_senha")
+
+            if st.button("Cadastrar"):
+                self.cadastrar(new_user, new_senha)
 
     def check(self):
         return st.session_state.logado
-
 
 # =========================
 # 🌍 DADOS NOAA
@@ -139,7 +194,7 @@ class HessApp:
     def run(self):
 
         if not self.auth.check():
-            self.auth.login()
+            self.auth.tela_login()
             return
 
         # LOCALIZAÇÃO
