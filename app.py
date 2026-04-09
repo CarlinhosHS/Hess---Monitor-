@@ -19,25 +19,26 @@ st.title("🚀 Monitor HESS")
 st.subheader("Monitoramento em Tempo Real")
 
 # dados simulados
-tempo = np.arange(0,900)
-dados = np.sin(tempo * 0.1)
+tempo = np.arange(0,500)
+dados = np.sin(tempo * 0.5)
 
 df = pd.DataFrame({
     "tempo": tempo,
     "x_t": dados
 })
 
-fig = px.line(df, x="tempo", y="x_t", title="Monitoramento em Tempo Real")
-
-st.plotly_chart(fig, use_container_width=True)
+fig.update_layout(
+    template="plotly_dark",
+    title="📡 Monitoramento Inteligente",
+    xaxis_title="Tempo",
+    yaxis_title="Sinal",
+)
 
 col1, col2, col3 = st.columns(3)
 
-hess = df[df["x_t"] > 0.8]
-ia = df[df["x_t"] < -0.8]
-col1.metric("Anomalias HESS", len(hess))
-col2.metric("Anomalias IA", len(ia))
-col3.metric("Último valor", round(df["x_t"].iloc[-1],2))
+col1.metric("🔷 Anomalias HESS", len(hess))
+col2.metric("🤖 Anomalias IA", len(ia))
+col3.metric("📈 Último valor", round(df["x_t"].iloc[-1], 2))
 
 import plotly.express as px
 
