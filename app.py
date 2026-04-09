@@ -10,29 +10,41 @@ import datetime
 st.set_page_config(page_title="HESS Monitor", layout="wide")
 
 # =========================
-# 🌤️ SISTEMA DE AMBIENTE (DIA / NOITE)
+# 🎨 TEMA PROFISSIONAL
 # =========================
 hora = datetime.datetime.now().hour
 
-if 6 <= hora < 12:
-    tema = "🌥️ Manhã"
-    bg = "#EAF6FF"
-elif 12 <= hora < 18:
-    tema = "☀️ Tarde"
-    bg = "#FFF3CD"
-elif 18 <= hora < 22:
-    tema = "🌆 Noite"
-    bg = "#1E1E2E"
+if 6 <= hora < 18:
+    # 🌤️ MODO CLARO (PROFISSIONAL)
+    bg = "#F5F7FA"
+    text_color = "#1F2937"
+    card = "#FFFFFF"
+    accent = "#2563EB"
 else:
-    tema = "🌌 Madrugada"
-    bg = "#0B0B1A"
+    # 🌙 MODO ESCURO (PADRÃO TOP)
+    bg = "#0F172A"
+    text_color = "#E2E8F0"
+    card = "#1E293B"
+    accent = "#38BDF8"
 
 st.markdown(f"""
-    <style>
-    .stApp {{
-        background-color: {bg};
-    }}
-    </style>
+<style>
+.stApp {{
+    background-color: {bg};
+    color: {text_color};
+}}
+
+div[data-testid="stMetric"] {{
+    background-color: {card};
+    padding: 15px;
+    border-radius: 12px;
+}}
+
+section[data-testid="stSidebar"] {{
+    background-color: {card};
+}}
+
+</style>
 """, unsafe_allow_html=True)
 
 # =========================
@@ -90,7 +102,9 @@ fig = px.line(df, x="tempo", y="kp")
 
 fig.update_layout(
     template="plotly_dark" if hora >= 18 else "plotly_white",
-    dragmode="pan"
+    plot_bgcolor=bg,
+    paper_bgcolor=bg,
+    font=dict(color=text_color),
 )
 
 # linhas de referência
