@@ -54,3 +54,12 @@ from ai_model import aplicar_ia
 
 df = aplicar_ia(df)
 ia = df[df["anomalia_ia"] == 1]
+
+st.divider()
+
+st.subheader("💰 Versão Premium")
+
+st.write("Receba alertas automáticos e previsões inteligentes.")
+
+if st.button("📩 Quero acesso premium"):
+    st.success("Entraremos em contato com você!")
