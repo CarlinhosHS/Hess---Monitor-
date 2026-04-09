@@ -1,6 +1,16 @@
 hess_app/
 │
 ├── app.py
+import plotly.express as px
+hess = df[df["anomalia_hess"] == 1]
+ia = df[df["anomalia_ia"] == 1]
+
+fig = px.line(df, x="tempo", y="x_t", title="Monitoramento em Tempo Real")
+
+fig.add_scatter(x=hess["tempo"], y=hess["x_t"], mode='markers', name='HESS')
+fig.add_scatter(x=ia["tempo"], y=ia["x_t"], mode='markers', name='IA')
+
+st.plotly_chart(fig, use_container_width=True)
 st.set_page_config(
     page_title="HESS Monitor",
     layout="wide"
@@ -27,22 +37,6 @@ df = aplicar_hess(df)
 df = aplicar_ia(df)
 
 # gráfico
-fig, ax = plt.subplots(figsize=(10,5))
-
-ax.plot(df["tempo"], df["x_t"], label="Sinal")
-
-# anomalias HESS
-hess = df[df["anomalia_hess"] == 1]
-ax.scatter(hess["tempo"], hess["x_t"], label="HESS", marker="o")
-
-# anomalias IA
-ia = df[df["anomalia_ia"] == 1]
-ax.scatter(ia["tempo"], ia["x_t"], label="IA", marker="x")
-
-ax.legend()
-ax.set_title("Detecção de Anomalias")
-
-st.pyplot(fig)
 
 st.write("Anomalias HESS:", len(hess))
 st.write("Anomalias IA:", len(ia))
