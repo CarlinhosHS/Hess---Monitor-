@@ -1,168 +1,151 @@
-from data import get_data
-from ai_model import aplicar_ia
 import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import datetime
 
-import streamlit as st
+# =========================
+# 🎨 CONFIG DA PÁGINA
+# =========================
+st.set_page_config(page_title="HESS Monitor", layout="wide")
 
-st.set_page_config(
-    page_title="HESS Monitor",
-    layout="wide",
-    page_icon="🚀"
-)
+# =========================
+# 🌤️ SISTEMA DE AMBIENTE (DIA / NOITE)
+# =========================
+hora = datetime.datetime.now().hour
 
-st.markdown("""
+if 6 <= hora < 12:
+    tema = "🌥️ Manhã"
+    bg = "#EAF6FF"
+elif 12 <= hora < 18:
+    tema = "☀️ Tarde"
+    bg = "#FFF3CD"
+elif 18 <= hora < 22:
+    tema = "🌆 Noite"
+    bg = "#1E1E2E"
+else:
+    tema = "🌌 Madrugada"
+    bg = "#0B0B1A"
+
+st.markdown(f"""
+    <style>
+    .stApp {{
+        background-color: {bg};
+    }}
+    </style>
+""", unsafe_allow_html=True)
+
+# =========================
+# 🎯 TÍTULO
+# =========================
+st.markdown(f"""
 # 🚀 HESS Monitor
-### Monitoramento Inteligente em Tempo Real
+### {tema} — Monitoramento Inteligente em Tempo Real
 """)
+
 st.divider()
-st.info("""
-🧠 Este sistema monitora a atividade geomagnética da Terra em tempo real.
 
-📡 Fonte: NOAA (dados espaciais reais)
+# =========================
+# 📡 DADOS SIMULADOS (BASE REALISTA)
+# =========================
+tempo = pd.date_range(end=pd.Timestamp.now(), periods=200, freq="min")
+valores = np.sin(np.linspace(0, 10, 200)) + np.random.normal(0, 0.2, 200)
 
-🔷 HESS → detecção por regra matemática  
-🤖 IA → detecção por aprendizado de máquina  
-
-Valores altos indicam possíveis tempestades solares.
-""")
-
-intervalo = st.selectbox(
-    "⏱️ Intervalo de atualização",
-    ["Tempo real (1 min)", "A cada 5 minutos", "A cada 1 hora"]
-)
-
-import time
-
-if intervalo == "Tempo real (1 min)":
-    time.sleep(60)
-    st.rerun()
-
-elif intervalo == "A cada 5 minutos":
-    time.sleep(300)
-    st.rerun()
-
-elif intervalo == "A cada 1 hora":
-    time.sleep(3600)
-    st.rerun()
-    
-df = get_data()
-
-fig = px.line(df, x="tempo", y="x_t")
-
-fig.update_layout(
-    template="plotly_dark",
-    title="📡 Atividade Geomagnética em Tempo Real",
-    xaxis_title="Tempo",
-    yaxis_title="Intensidade (Kp Index)",
-    dragmode=False  # 🔥 remove zoom ao arrastar
-)
-
-st.plotly_chart(fig, use_container_width=True, config={
-    "scrollZoom": False,   # 🔥 remove zoom com dedo
-    "displayModeBar": False  # 🔥 remove botões chatos
+df = pd.DataFrame({
+    "tempo": tempo,
+    "kp": valores
 })
 
+# =========================
+# 🎛️ CONTROLE DO USUÁRIO
+# =========================
+st.sidebar.header("⚙️ Configurações")
 
-# criar anomalias primeiro
-hess = df[df["x_t"] > 0.8]
-ia = df[df["x_t"] < -0.8]
+janela = st.sidebar.slider("Quantidade de pontos", 50, 200, 150)
+df = df.tail(janela)
 
-# depois mostrar métricas
+mostrar_anomalia = st.sidebar.checkbox("Mostrar anomalias", True)
+
+# =========================
+# 🔍 DETECÇÃO SIMPLES
+# =========================
+hess = df[df["kp"] > 0.8]
+ia = df[df["kp"] < -0.8]
+
+# =========================
+# 📊 MÉTRICAS
+# =========================
 col1, col2, col3 = st.columns(3)
 
-col1.metric("🔷 Eventos HESS", len(hess))
-col2.metric("🤖 Eventos IA", len(ia))
-
-ultimo = round(df["x_t"].iloc[-1], 2)
-col3.metric("📊 Último índice Kp", ultimo)
-
-if ultimo >= 5:
-    st.error("🔴 Tempestade solar detectada!")
-elif ultimo >= 3:
-    st.warning("🟡 Atividade elevada")
-else:
-    st.success("🟢 Atividade normal")
-fig = px.line(df, x="tempo", y="x_t", title="Monitoramento em Tempo Real")
-
-fig.add_scatter(x=hess["tempo"], y=hess["x_t"], mode='markers', name='HESS')
-fig.add_scatter(x=ia["tempo"], y=ia["x_t"], mode='markers', name='IA')
-
-st.plotly_chart(fig, use_container_width=True) 
-
-from ai_model import aplicar_ia
-
-df = get_data()
-
-df = aplicar_ia(df)
-
-# anomalias
-hess = df[df["x_t"] > 0.8]
-ia = df[df["anomalia_ia"] == 1]
+col1.metric("🔷 HESS", len(hess))
+col2.metric("🤖 IA", len(ia))
+col3.metric("📈 Último Kp", round(df["kp"].iloc[-1], 2))
 
 # =========================
-# 📊 GRÁFICO PRINCIPAL
+# 📊 GRÁFICO PRINCIPAL (INTERATIVO)
 # =========================
+st.subheader("📡 Atividade Geomagnética")
 
-st.subheader("📡 Atividade Geomagnética em Tempo Real")
+fig = px.line(df, x="tempo", y="kp")
 
 fig.update_layout(
-    template="plotly_dark",
-    title="Atividade Geomagnética",
-    xaxis_title="Tempo",
-    yaxis_title="Kp Index",
-    dragmode=False
+    template="plotly_dark" if hora >= 18 else "plotly_white",
+    dragmode="pan"
 )
 
 # linhas de referência
-fig.add_hline(y=3, line_dash="dash", line_color="yellow")
-fig.add_hline(y=5, line_dash="dash", line_color="red")
+fig.add_hline(y=0.8, line_color="orange")
+fig.add_hline(y=-0.8, line_color="red")
+
+# anomalias
+if mostrar_anomalia:
+    fig.add_scatter(
+        x=hess["tempo"],
+        y=hess["kp"],
+        mode="markers",
+        name="HESS",
+        marker=dict(size=8)
+    )
+
+    fig.add_scatter(
+        x=ia["tempo"],
+        y=ia["kp"],
+        mode="markers",
+        name="IA",
+        marker=dict(size=8)
+    )
 
 st.plotly_chart(
     fig,
     use_container_width=True,
     config={
-        "scrollZoom": False,
-        "displayModeBar": False
+        "scrollZoom": True,  # agora pode navegar melhor
+        "displayModeBar": True
     }
 )
 
 # =========================
-# 🔍 GRÁFICO DE ANOMALIAS
+# 📚 EXPLICAÇÃO
 # =========================
+st.info("""
+📊 Como ler:
 
-st.subheader("🔍 Detecção de Anomalias")
+- Linha = comportamento da atividade geomagnética
+- Pontos = eventos fora do padrão
+- Quanto mais alto → mais atividade solar
 
-# pontos HESS
-fig2.add_scatter(
-    x=hess["tempo"],
-    y=hess["x_t"],
-    mode="markers",
-    name="HESS",
-)
+🔴 acima de 0.8 → alerta  
+🔵 abaixo de -0.8 → comportamento incomum  
+""")
 
-# pontos IA
-fig2.add_scatter(
-    x=ia["tempo"],
-    y=ia["x_t"],
-    mode="markers",
-    name="IA",
-)
+# =========================
+# 💰 FUTURO (PREMIUM)
+# =========================
+st.divider()
 
-fig2.update_layout(
-    template="plotly_dark",
-    dragmode=False
-)
+st.subheader("💰 Recursos avançados")
 
-st.plotly_chart(
-    fig2,
-    use_container_width=True,
-    config={
-        "scrollZoom": False,
-        "displayModeBar": False
-    }
-)
-if st.button("📩 Quero acesso premium"):
-    st.success("Entraremos em contato com você!")
+st.write("Previsão, alertas e análise inteligente em breve.")
+
+if st.button("📩 Quero acesso antecipado"):
+    st.success("Você entrou na lista 🚀")
