@@ -1,4 +1,3 @@
-
 @st.cache_data(ttl=300)
 def get_location():
     import requests
