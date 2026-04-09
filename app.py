@@ -22,6 +22,8 @@ st.plotly_chart(fig, use_container_width=True)
 
 col1, col2, col3 = st.columns(3)
 
+hess = df[df["x_t"] > 0.8]
+ia = df[df["x_t"] < -0.8]
 col1.metric("Anomalias HESS", len(hess))
 col2.metric("Anomalias IA", len(ia))
 col3.metric("Último valor", round(df["x_t"].iloc[-1],2))
