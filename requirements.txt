@@ -2,7 +2,4 @@ streamlit
 pandas
 numpy
 plotly
-matplotlib
-requests
-scikit-learn
 requests
