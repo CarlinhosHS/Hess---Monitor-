@@ -46,3 +46,8 @@ fig.add_scatter(x=hess["tempo"], y=hess["x_t"], mode='markers', name='HESS')
 fig.add_scatter(x=ia["tempo"], y=ia["x_t"], mode='markers', name='IA')
 
 st.plotly_chart(fig, use_container_width=True) 
+
+from ai_model import aplicar_ia
+
+df = aplicar_ia(df)
+ia = df[df["anomalia_ia"] == 1]
