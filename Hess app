@@ -1,6 +1,15 @@
 hess_app/
 │
 ├── app.py
+st.set_page_config(
+    page_title="HESS Monitor",
+    layout="wide"
+)
+col1, col2, col3 = st.columns(3)
+
+col1.metric("Anomalias HESS", len(hess))
+col2.metric("Anomalias IA", len(ia))
+col3.metric("Último valor", round(df["x_t"].iloc[-1],2))
 import streamlit as st
 import matplotlib.pyplot as plt
 
