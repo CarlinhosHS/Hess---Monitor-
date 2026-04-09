@@ -1,4 +1,4 @@
-├── app.py
+app.py
 import plotly.express as px
 hess = df[df["anomalia_hess"] == 1]
 ia = df[df["anomalia_ia"] == 1]
