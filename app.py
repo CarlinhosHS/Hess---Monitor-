@@ -1,3 +1,4 @@
+from data import get_data
 from ai_model import aplicar_ia
 import streamlit as st
 import pandas as pd
@@ -20,14 +21,7 @@ st.divider()
 st.title("🚀 Monitor HESS")
 st.subheader("Monitoramento em Tempo Real")
 
-# dados simulados
-tempo = np.arange(0,500)
-dados = np.sin(tempo * 0.5)
-
-df = pd.DataFrame({
-    "tempo": tempo,
-    "x_t": dados
-})
+df = get_data()
 
 fig = px.line(df, x="tempo", y="x_t")
 fig.update_layout(
