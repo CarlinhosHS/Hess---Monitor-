@@ -61,8 +61,8 @@ else:
 
 st.markdown(f"""
 # 🚀 HESS Monitor
-### {tema} — Monitoramento Inteligente em Tempo Real
-""")
+### {tema}
+📡 Monitoramento Inteligente em Tempo Real
 
 st.divider()
 
