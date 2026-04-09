@@ -15,6 +15,7 @@ st.markdown("""
 # 🚀 HESS Monitor
 ### 📊 Monitoramento Inteligente em Tempo Real
 """)
+st.divider()
 st.title("🚀 Monitor HESS")
 st.subheader("Monitoramento em Tempo Real")
 
@@ -46,7 +47,6 @@ col1, col2, col3 = st.columns(3)
 col1.metric("🔷 Anomalias HESS", len(hess))
 col2.metric("🤖 Anomalias IA", len(ia))
 col3.metric("📈 Último valor", round(df["x_t"].iloc[-1], 2))
-
 
 fig = px.line(df, x="tempo", y="x_t", title="Monitoramento em Tempo Real")
 
