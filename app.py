@@ -28,6 +28,26 @@ st.info("""
 
 Valores altos indicam possíveis tempestades solares.
 """)
+
+intervalo = st.selectbox(
+    "⏱️ Intervalo de atualização",
+    ["Tempo real (1 min)", "A cada 5 minutos", "A cada 1 hora"]
+)
+
+import time
+
+if intervalo == "Tempo real (1 min)":
+    time.sleep(60)
+    st.rerun()
+
+elif intervalo == "A cada 5 minutos":
+    time.sleep(300)
+    st.rerun()
+
+elif intervalo == "A cada 1 hora":
+    time.sleep(3600)
+    st.rerun()
+    
 df = get_data()
 
 fig = px.line(df, x="tempo", y="x_t")
@@ -53,9 +73,22 @@ ia = df[df["x_t"] < -0.8]
 # depois mostrar métricas
 col1, col2, col3 = st.columns(3)
 
-col1.metric("🔷 HESS", len(hess))
-col2.metric("🤖 IA", len(ia))
-col3.metric("📊 Último Kp", round(df["x_t"].iloc[-1], 2))
+col1.metric("🔷 Eventos HESS", len(hess))
+st.caption("Detectados por regra matemática")
+
+col2.metric("🤖 Eventos IA", len(ia))
+st.caption("Detectados por inteligência artificial")
+
+ultimo = round(df["x_t"].iloc[-1], 2)
+
+col3.metric("📊 Último índice Kp", ultimo)
+
+if ultimo >= 5:
+    st.error("🔴 Tempestade solar detectada!")
+elif ultimo >= 3:
+    st.warning("🟡 Atividade elevada")
+else:
+    st.success("🟢 Atividade normal")
 
 fig = px.line(df, x="tempo", y="x_t", title="Monitoramento em Tempo Real")
 
@@ -75,11 +108,36 @@ st.subheader("📊 Detecção de Anomalias")
 
 fig2 = px.line(df, x="tempo", y="x_t")
 
-fig2.add_scatter(
-    x=hess["tempo"],
-    y=hess["x_t"],
-    mode="markers",
-    name="HESS",
+st.subheader("📊 Como interpretar este gráfico")
+
+st.markdown("""
+- A linha mostra a **atividade geomagnética da Terra (Kp Index)**  
+- Quanto mais alto o valor, maior a atividade solar  
+- Valores importantes:
+  - 🟢 0 a 2 → Normal
+  - 🟡 3 a 4 → Atenção
+  - 🔴 5+ → Tempestade solar (impacto possível)
+
+👉 O gráfico mostra como essa atividade muda ao longo do tempo.
+""")
+
+fig = px.line(df, x="tempo", y="x_t")
+
+fig.update_layout(
+    template="plotly_dark",
+    title="📡 Atividade Geomagnética",
+    xaxis_title="Tempo",
+    yaxis_title="Kp Index",
+    dragmode=False
+)
+
+fig.add_hline(y=3, line_dash="dash", line_color="yellow")
+fig.add_hline(y=5, line_dash="dash", line_color="red")
+
+st.plotly_chart(
+    fig,
+    use_container_width=True,
+    config={"scrollZoom": False, "displayModeBar": False}
 )
 
 fig2.add_scatter(
@@ -99,7 +157,21 @@ st.plotly_chart(fig2, use_container_width=True, config={
     "displayModeBar": False
 })
 
+st.subheader("🔍 Detecção de Anomalias")
+
+st.markdown("""
+- 🔷 Pontos azuis → detectados pelo modelo HESS  
+- 🔴 Pontos vermelhos → detectados pela IA  
+
+👉 Esses pontos indicam comportamentos fora do padrão.
+""")
+
 st.write("Receba alertas automáticos e previsões inteligentes.")
 
+st.plotly_chart(
+    fig2,
+    use_container_width=True,
+    config={"scrollZoom": False, "displayModeBar": False}
+)
 if st.button("📩 Quero acesso premium"):
     st.success("Entraremos em contato com você!")
