@@ -74,13 +74,9 @@ ia = df[df["x_t"] < -0.8]
 col1, col2, col3 = st.columns(3)
 
 col1.metric("🔷 Eventos HESS", len(hess))
-st.caption("Detectados por regra matemática")
-
 col2.metric("🤖 Eventos IA", len(ia))
-st.caption("Detectados por inteligência artificial")
 
 ultimo = round(df["x_t"].iloc[-1], 2)
-
 col3.metric("📊 Último índice Kp", ultimo)
 
 if ultimo >= 5:
@@ -89,7 +85,6 @@ elif ultimo >= 3:
     st.warning("🟡 Atividade elevada")
 else:
     st.success("🟢 Atividade normal")
-
 fig = px.line(df, x="tempo", y="x_t", title="Monitoramento em Tempo Real")
 
 fig.add_scatter(x=hess["tempo"], y=hess["x_t"], mode='markers', name='HESS')
@@ -99,19 +94,19 @@ st.plotly_chart(fig, use_container_width=True)
 
 from ai_model import aplicar_ia
 
+df = get_data()
+
 df = aplicar_ia(df)
+
+# anomalias
+hess = df[df["x_t"] > 0.8]
 ia = df[df["anomalia_ia"] == 1]
-
-st.divider()
-
 
 # =========================
 # 📊 GRÁFICO PRINCIPAL
 # =========================
 
 st.subheader("📡 Atividade Geomagnética em Tempo Real")
-
-fig = px.line(df, x="tempo", y="x_t")
 
 fig.update_layout(
     template="plotly_dark",
@@ -139,8 +134,6 @@ st.plotly_chart(
 # =========================
 
 st.subheader("🔍 Detecção de Anomalias")
-
-fig2 = px.line(df, x="tempo", y="x_t")
 
 # pontos HESS
 fig2.add_scatter(
