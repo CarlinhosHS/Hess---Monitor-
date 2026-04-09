@@ -1,4 +1,25 @@
 app.py
+import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.express as px
+
+st.set_page_config(page_title="HESS Monitor", layout="wide")
+
+st.title("🚀 HESS Monitor")
+
+# dados simulados
+tempo = np.arange(0, 100)
+dados = np.sin(tempo * 0.1)
+
+df = pd.DataFrame({
+    "tempo": tempo,
+    "x_t": dados
+})
+
+fig = px.line(df, x="tempo", y="x_t", title="Monitoramento em Tempo Real")
+
+st.plotly_chart(fig, use_container_width=True)
 import plotly.express as px
 hess = df[df["anomalia_hess"] == 1]
 ia = df[df["anomalia_ia"] == 1]
