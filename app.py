@@ -10,22 +10,23 @@ import datetime
 st.set_page_config(page_title="HESS Monitor", layout="wide")
 
 # =========================
-# 🎨 TEMA PROFISSIONAL
+# =========================
+# 🎨 TEMA PROFISSIONAL PADRÃO
 # =========================
 hora = datetime.datetime.now().hour
 
 if 6 <= hora < 18:
-    # 🌤️ MODO CLARO (PROFISSIONAL)
+    # ☀️ MODO CLARO
     bg = "#F5F7FA"
-    text_color = "#1F2937"
+    text_color = "#000000"   # TEXTO PRETO
     card = "#FFFFFF"
-    accent = "#2563EB"
+    graph_template = "plotly_white"
 else:
-    # 🌙 MODO ESCURO (PADRÃO TOP)
+    # 🌙 MODO ESCURO
     bg = "#0F172A"
-    text_color = "#E2E8F0"
+    text_color = "#FFFFFF"   # TEXTO BRANCO
     card = "#1E293B"
-    accent = "#38BDF8"
+    graph_template = "plotly_dark"
 
 st.markdown(f"""
 <style>
@@ -34,14 +35,28 @@ st.markdown(f"""
     color: {text_color};
 }}
 
+/* textos gerais */
+h1, h2, h3, h4, h5, h6, p, span, label {{
+    color: {text_color} !important;
+}}
+
+/* cards */
 div[data-testid="stMetric"] {{
     background-color: {card};
     padding: 15px;
     border-radius: 12px;
 }}
 
+/* sidebar */
 section[data-testid="stSidebar"] {{
     background-color: {card};
+}}
+
+/* botão premium */
+button[kind="primary"] {{
+    background-color: #2563EB !important;
+    color: white !important;
+    border-radius: 10px;
 }}
 
 </style>
@@ -110,39 +125,40 @@ st.subheader("📡 Atividade Geomagnética")
 fig = px.line(df, x="tempo", y="kp")
 
 fig.update_layout(
-    template="plotly_dark" if hora >= 18 else "plotly_white",
+    template=graph_template,
     plot_bgcolor=bg,
     paper_bgcolor=bg,
     font=dict(color=text_color),
+    dragmode="pan"
 )
 
 # linhas de referência
-fig.add_hline(y=0.8, line_color="orange")
-fig.add_hline(y=-0.8, line_color="red")
+fig.add_hline(y=0.8, line_color="orange", line_dash="dash")
+fig.add_hline(y=-0.8, line_color="red", line_dash="dash")
 
-# anomalias
-if mostrar_anomalia:
-    fig.add_scatter(
-        x=hess["tempo"],
-        y=hess["kp"],
-        mode="markers",
-        name="HESS",
-        marker=dict(size=8)
-    )
+# pontos HESS
+fig.add_scatter(
+    x=hess["tempo"],
+    y=hess["kp"],
+    mode="markers",
+    name="HESS",
+    marker=dict(size=8, color="orange")
+)
 
-    fig.add_scatter(
-        x=ia["tempo"],
-        y=ia["kp"],
-        mode="markers",
-        name="IA",
-        marker=dict(size=8)
-    )
+# pontos IA
+fig.add_scatter(
+    x=ia["tempo"],
+    y=ia["kp"],
+    mode="markers",
+    name="IA",
+    marker=dict(size=8, color="cyan")
+)
 
 st.plotly_chart(
     fig,
     use_container_width=True,
     config={
-        "scrollZoom": True,  # agora pode navegar melhor
+        "scrollZoom": True,
         "displayModeBar": True
     }
 )
@@ -170,5 +186,5 @@ st.subheader("💰 Recursos avançados")
 
 st.write("Previsão, alertas e análise inteligente em breve.")
 
-if st.button("📩 Quero acesso antecipado"):
-    st.success("Você entrou na lista 🚀")
+if st.button("💎 Quero acesso premium"):
+    st.success("🚀 Você entrou na lista premium!")
