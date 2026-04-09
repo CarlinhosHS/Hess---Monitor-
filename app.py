@@ -2,194 +2,211 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import requests
-import datetime
+from datetime import datetime
+from statsmodels.tsa.holtwinters import SimpleExpSmoothing
 import plotly.express as px
-from sklearn.linear_model import LinearRegression
 
 # =========================
-# CONFIG
+# 🔐 SISTEMA DE LOGIN
 # =========================
-st.set_page_config(page_title="HESS AI Global", layout="wide")
+class Auth:
+    def __init__(self):
+        if "logado" not in st.session_state:
+            st.session_state.logado = False
 
-# =========================
-# TEMA
-# =========================
-hora = datetime.datetime.now().hour
+    def login(self):
+        st.title("🔐 Login HESS")
+        user = st.text_input("Usuário")
+        senha = st.text_input("Senha", type="password")
 
-if 6 <= hora < 18:
-    bg = "#F5F7FA"
-    text_color = "#000000"
-    graph_template = "plotly_white"
-else:
-    bg = "#0F172A"
-    text_color = "#FFFFFF"
-    graph_template = "plotly_dark"
+        if st.button("Entrar"):
+            if user == "admin" and senha == "123":
+                st.session_state.logado = True
+                st.success("Login realizado!")
+                st.rerun()
+            else:
+                st.error("Credenciais inválidas")
 
-st.markdown(f"""
-<style>
-.stApp {{
-    background-color: {bg};
-    color: {text_color};
-}}
-</style>
-""", unsafe_allow_html=True)
+    def check(self):
+        return st.session_state.logado
+
 
 # =========================
-# LOCALIZAÇÃO
+# 🌍 DADOS NOAA
 # =========================
-try:
-    geo = requests.get("https://ipapi.co/json/").json()
-    cidade = geo.get("city", "Desconhecida")
-    pais = geo.get("country_name", "")
-except:
-    cidade = "Indisponível"
-    pais = ""
+class DataLoader:
 
-st.title("🚀 HESS AI Monitor")
-st.write(f"📍 {cidade}, {pais}")
+    @st.cache_data(ttl=60)
+    def get_kp_data(self):
+        url = "https://services.swpc.noaa.gov/json/planetary_k_index_1m.json"
+        r = requests.get(url)
+        data = r.json()
 
-# =========================
-# DADOS REAIS NOAA
-# =========================
-url = "https://services.swpc.noaa.gov/json/planetary_k_index_1m.json"
-data = requests.get(url).json()
+        df = pd.DataFrame(data)
+        df["time_tag"] = pd.to_datetime(df["time_tag"])
+        df = df.rename(columns={"kp_index": "kp"})
 
-df = pd.DataFrame(data)
-df["time_tag"] = pd.to_datetime(df["time_tag"])
-df["kp"] = df["kp_index"]
+        return df.tail(100)
 
-df = df.tail(120)
 
 # =========================
-# IA (PREVISÃO)
+# 🧠 IA DE PREVISÃO
 # =========================
-df["t"] = np.arange(len(df))
+class IA:
+    def prever(self, df):
+        modelo = SimpleExpSmoothing(df["kp"]).fit()
+        previsao = modelo.forecast(10)
 
-X = df[["t"]]
-y = df["kp"]
+        previsao = np.clip(previsao, 0, 9)
+        return previsao
 
-model = LinearRegression()
-model.fit(X, y)
-
-future_t = np.arange(len(df), len(df)+20).reshape(-1,1)
-future_pred = model.predict(future_t)
-
-future_time = pd.date_range(
-    start=df["time_tag"].iloc[-1],
-    periods=20,
-    freq="min"
-)
-
-df_future = pd.DataFrame({
-    "time_tag": future_time,
-    "kp": future_pred
-})
 
 # =========================
-# MÉTRICAS
+# 📊 DASHBOARD
 # =========================
-ultimo = df["kp"].iloc[-1]
+class Dashboard:
 
-col1, col2 = st.columns(2)
+    def grafico_principal(self, df, previsao):
+        fig = px.line(df, x="time_tag", y="kp",
+                      title="📡 Atividade Geomagnética em Tempo Real")
 
-col1.metric("📈 Kp Atual", round(ultimo,2))
+        # previsão
+        futuro = pd.date_range(df["time_tag"].iloc[-1], periods=10, freq="T")
+        fig.add_scatter(x=futuro, y=previsao, mode="lines", name="Previsão IA")
 
-if ultimo >= 5:
-    col2.error("🌪️ Tempestade Solar Forte")
-elif ultimo >= 3:
-    col2.warning("⚠️ Atividade Elevada")
-else:
-    col2.success("✅ Normal")
+        # linhas de referência
+        fig.add_hline(y=3, line_dash="dash", line_color="yellow")
+        fig.add_hline(y=5, line_dash="dash", line_color="red")
 
-# =========================
-# ALERTA AUTOMÁTICO
-# =========================
-if ultimo >= 5:
-    st.error("🚨 ALERTA: Possível impacto em GPS, energia e comunicação")
-elif ultimo >= 4:
-    st.warning("⚠️ Atenção: aumento da atividade solar")
+        fig.update_layout(
+            template="plotly_dark" if st.session_state.tema == "escuro" else "plotly_white",
+            xaxis_title="Tempo",
+            yaxis_title="Índice Kp",
+        )
 
-# =========================
-# GRÁFICO COM PREVISÃO
-# =========================
-st.subheader("📡 Tempo Real + Previsão IA")
+        st.plotly_chart(fig, use_container_width=True)
 
-fig = px.line(df, x="time_tag", y="kp")
+    def metricas(self, df):
+        col1, col2, col3 = st.columns(3)
 
-# previsão
-fig.add_scatter(
-    x=df_future["time_tag"],
-    y=df_future["kp"],
-    mode="lines",
-    name="Previsão IA",
-    line=dict(dash="dash")
-)
+        ultimo = round(df["kp"].iloc[-1], 2)
 
-fig.update_layout(
-    template=graph_template,
-    plot_bgcolor=bg,
-    paper_bgcolor=bg,
-    font=dict(color=text_color),
-)
+        col1.metric("📈 Último Kp", ultimo)
+        col2.metric("⚠️ Alertas", len(df[df["kp"] > 3]))
+        col3.metric("🚨 Críticos", len(df[df["kp"] > 5]))
 
-fig.add_hline(y=3, line_dash="dash", line_color="yellow")
-fig.add_hline(y=5, line_dash="dash", line_color="red")
+        if ultimo >= 5:
+            st.error("🚨 Tempestade Solar")
+        elif ultimo >= 3:
+            st.warning("⚠️ Atividade Elevada")
+        else:
+            st.success("✅ Normal")
 
-st.plotly_chart(fig, use_container_width=True)
 
 # =========================
-# MAPA GLOBAL MELHORADO
+# 🌍 LOCALIZAÇÃO
 # =========================
-st.subheader("🌍 Mapa Global de Atividade")
+class Geo:
 
-# simulação mais rica
-world_df = pd.DataFrame({
-    "lat": np.random.uniform(-60, 70, 30),
-    "lon": np.random.uniform(-180, 180, 30),
-    "kp": np.random.uniform(1, 6, 30)
-})
+    @st.cache_data(ttl=300)
+    def get_location(self):
+        try:
+            data = requests.get("https://ipapi.co/json").json()
+            return data["city"], data["country_name"]
+        except:
+            return "Desconhecido", "Desconhecido"
 
-fig_map = px.scatter_geo(
-    world_df,
-    lat="lat",
-    lon="lon",
-    color="kp",
-    size="kp",
-    projection="natural earth",
-)
-
-fig_map.update_layout(template=graph_template)
-
-st.plotly_chart(fig_map, use_container_width=True)
 
 # =========================
-# EXPLICAÇÃO
+# 🚀 APP PRINCIPAL
 # =========================
-st.subheader("🧠 O que é o HESS")
+class HessApp:
 
-st.markdown("""
-O HESS é um sistema inteligente que:
+    def __init__(self):
+        st.set_page_config(layout="wide", page_title="HESS PRO")
 
-- Usa dados reais da NOAA
-- Aplica modelos matemáticos e IA
-- Detecta anomalias geomagnéticas
-- Prevê eventos futuros
+        self.auth = Auth()
+        self.data = DataLoader()
+        self.ia = IA()
+        self.dashboard = Dashboard()
+        self.geo = Geo()
 
-📊 Índice Kp:
-- 0–2 → Normal  
-- 3–4 → Atenção  
-- 5+ → Tempestade solar  
+        if "tema" not in st.session_state:
+            st.session_state.tema = "escuro"
 
-Impactos:
-- GPS  
-- Internet  
-- Energia elétrica  
-""")
+        self.run()
+
+    def run(self):
+
+        if not self.auth.check():
+            self.auth.login()
+            return
+
+        # LOCALIZAÇÃO
+        cidade, pais = self.geo.get_location()
+
+        # SIDEBAR
+        st.sidebar.title("⚙️ Configurações")
+        st.session_state.tema = st.sidebar.radio("Tema", ["escuro", "claro"])
+
+        # TABS
+        tab1, tab2, tab3 = st.tabs([
+            "📊 Monitoramento",
+            "🧠 IA & Previsão",
+            "⚙️ Sistema"
+        ])
+
+        df = self.data.get_kp_data()
+        previsao = self.ia.prever(df)
+
+        # -------------------
+        # 📊 MONITORAMENTO
+        # -------------------
+        with tab1:
+            st.title("🚀 HESS Monitor")
+            st.caption(f"📍 {cidade}, {pais}")
+
+            self.dashboard.metricas(df)
+            self.dashboard.grafico_principal(df, previsao)
+
+        # -------------------
+        # 🧠 IA
+        # -------------------
+        with tab2:
+            st.subheader("🧠 Previsão Inteligente")
+
+            futuro = pd.DataFrame({
+                "tempo": range(len(previsao)),
+                "kp": previsao
+            })
+
+            fig = px.line(futuro, x="tempo", y="kp", title="Previsão IA")
+            st.plotly_chart(fig, use_container_width=True)
+
+        # -------------------
+        # ⚙️ SISTEMA
+        # -------------------
+        with tab3:
+            st.subheader("ℹ️ Sobre o HESS")
+
+            st.markdown("""
+            O HESS é um sistema inteligente de monitoramento geomagnético que:
+
+            - Usa dados reais da NOAA
+            - Detecta anomalias solares
+            - Aplica IA para previsão
+            - Pode alertar eventos extremos
+
+            🎯 Objetivo:
+            Antecipar tempestades solares e proteger sistemas sensíveis.
+            """)
+
+            if st.button("🚪 Sair"):
+                st.session_state.logado = False
+                st.rerun()
+
 
 # =========================
-# PREMIUM
+# 🚀 EXECUÇÃO
 # =========================
-st.subheader("💰 Premium")
-
-if st.button("💎 Quero acesso premium"):
-    st.success("🚀 Em breve: IA avançada + alertas no celular")
+HessApp()
