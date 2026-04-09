@@ -50,6 +50,15 @@ section[data-testid="stSidebar"] {{
 # =========================
 # 🎯 TÍTULO
 # =========================
+if 6 <= hora < 12:
+    tema = "🌥️ Manhã"
+elif 12 <= hora < 18:
+    tema = "☀️ Tarde"
+elif 18 <= hora < 22:
+    tema = "🌆 Noite"
+else:
+    tema = "🌌 Madrugada"
+
 st.markdown(f"""
 # 🚀 HESS Monitor
 ### {tema} — Monitoramento Inteligente em Tempo Real
