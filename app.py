@@ -1,28 +1,28 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import requests
 import datetime
 import plotly.express as px
+from sklearn.linear_model import LinearRegression
 
 # =========================
-# 🌍 CONFIG
+# CONFIG
 # =========================
-st.set_page_config(page_title="HESS Monitor Global", layout="wide")
+st.set_page_config(page_title="HESS AI Global", layout="wide")
 
 # =========================
-# 🎨 TEMA
+# TEMA
 # =========================
 hora = datetime.datetime.now().hour
 
 if 6 <= hora < 18:
     bg = "#F5F7FA"
     text_color = "#000000"
-    card = "#FFFFFF"
     graph_template = "plotly_white"
 else:
     bg = "#0F172A"
     text_color = "#FFFFFF"
-    card = "#1E293B"
     graph_template = "plotly_dark"
 
 st.markdown(f"""
@@ -31,14 +31,11 @@ st.markdown(f"""
     background-color: {bg};
     color: {text_color};
 }}
-h1,h2,h3,h4,p {{
-    color: {text_color} !important;
-}}
 </style>
 """, unsafe_allow_html=True)
 
 # =========================
-# 📍 LOCALIZAÇÃO DO USUÁRIO
+# LOCALIZAÇÃO
 # =========================
 try:
     geo = requests.get("https://ipapi.co/json/").json()
@@ -48,56 +45,91 @@ except:
     cidade = "Indisponível"
     pais = ""
 
-st.title("🚀 HESS Monitor Global")
-st.write(f"📍 Localização detectada: **{cidade}, {pais}**")
+st.title("🚀 HESS AI Monitor")
+st.write(f"📍 {cidade}, {pais}")
 
 # =========================
-# 📡 DADOS REAIS (NOAA)
+# DADOS REAIS NOAA
 # =========================
-try:
-    url = "https://services.swpc.noaa.gov/json/planetary_k_index_1m.json"
-    data = requests.get(url).json()
+url = "https://services.swpc.noaa.gov/json/planetary_k_index_1m.json"
+data = requests.get(url).json()
 
-    df = pd.DataFrame(data)
-    df["time_tag"] = pd.to_datetime(df["time_tag"])
-    df["kp"] = df["kp_index"]
+df = pd.DataFrame(data)
+df["time_tag"] = pd.to_datetime(df["time_tag"])
+df["kp"] = df["kp_index"]
 
-    df = df.tail(120)
-
-except:
-    st.error("Erro ao carregar dados reais.")
-    df = pd.DataFrame()
+df = df.tail(120)
 
 # =========================
-# 📊 MÉTRICAS
+# IA (PREVISÃO)
 # =========================
-if not df.empty:
-    ultimo = df["kp"].iloc[-1]
+df["t"] = np.arange(len(df))
 
-    col1, col2 = st.columns(2)
+X = df[["t"]]
+y = df["kp"]
 
-    col1.metric("📈 Último Kp", ultimo)
+model = LinearRegression()
+model.fit(X, y)
 
-    if ultimo >= 5:
-        col2.error("🌪️ Tempestade solar forte")
-    elif ultimo >= 3:
-        col2.warning("⚠️ Atividade elevada")
-    else:
-        col2.success("✅ Atividade normal")
+future_t = np.arange(len(df), len(df)+20).reshape(-1,1)
+future_pred = model.predict(future_t)
+
+future_time = pd.date_range(
+    start=df["time_tag"].iloc[-1],
+    periods=20,
+    freq="min"
+)
+
+df_future = pd.DataFrame({
+    "time_tag": future_time,
+    "kp": future_pred
+})
 
 # =========================
-# 📊 GRÁFICO PRINCIPAL
+# MÉTRICAS
 # =========================
-st.subheader("📡 Atividade Geomagnética (Tempo Real)")
+ultimo = df["kp"].iloc[-1]
+
+col1, col2 = st.columns(2)
+
+col1.metric("📈 Kp Atual", round(ultimo,2))
+
+if ultimo >= 5:
+    col2.error("🌪️ Tempestade Solar Forte")
+elif ultimo >= 3:
+    col2.warning("⚠️ Atividade Elevada")
+else:
+    col2.success("✅ Normal")
+
+# =========================
+# ALERTA AUTOMÁTICO
+# =========================
+if ultimo >= 5:
+    st.error("🚨 ALERTA: Possível impacto em GPS, energia e comunicação")
+elif ultimo >= 4:
+    st.warning("⚠️ Atenção: aumento da atividade solar")
+
+# =========================
+# GRÁFICO COM PREVISÃO
+# =========================
+st.subheader("📡 Tempo Real + Previsão IA")
 
 fig = px.line(df, x="time_tag", y="kp")
+
+# previsão
+fig.add_scatter(
+    x=df_future["time_tag"],
+    y=df_future["kp"],
+    mode="lines",
+    name="Previsão IA",
+    line=dict(dash="dash")
+)
 
 fig.update_layout(
     template=graph_template,
     plot_bgcolor=bg,
     paper_bgcolor=bg,
     font=dict(color=text_color),
-    dragmode="pan"
 )
 
 fig.add_hline(y=3, line_dash="dash", line_color="yellow")
@@ -106,15 +138,15 @@ fig.add_hline(y=5, line_dash="dash", line_color="red")
 st.plotly_chart(fig, use_container_width=True)
 
 # =========================
-# 🌍 MAPA GLOBAL
+# MAPA GLOBAL MELHORADO
 # =========================
-st.subheader("🌍 Atividade Global (Visão Mundial)")
+st.subheader("🌍 Mapa Global de Atividade")
 
-# simulação com base real simplificada
+# simulação mais rica
 world_df = pd.DataFrame({
-    "lat": [0, 40, -30, 60, -10],
-    "lon": [0, -74, 120, 30, -50],
-    "kp": [2, 4, 3, 5, 1]
+    "lat": np.random.uniform(-60, 70, 30),
+    "lon": np.random.uniform(-180, 180, 30),
+    "kp": np.random.uniform(1, 6, 30)
 })
 
 fig_map = px.scatter_geo(
@@ -126,40 +158,38 @@ fig_map = px.scatter_geo(
     projection="natural earth",
 )
 
-fig_map.update_layout(
-    template=graph_template
-)
+fig_map.update_layout(template=graph_template)
 
 st.plotly_chart(fig_map, use_container_width=True)
 
 # =========================
-# 🧠 EXPLICAÇÃO HESS
+# EXPLICAÇÃO
 # =========================
-st.subheader("🧠 O que é o HESS?")
+st.subheader("🧠 O que é o HESS")
 
 st.markdown("""
-O **HESS (Sistema de Monitoramento Inteligente)** é um modelo que:
+O HESS é um sistema inteligente que:
 
-- 📡 Analisa dados espaciais reais (NOAA)
-- 🤖 Aplica lógica matemática e inteligência artificial
-- ⚠️ Detecta anomalias geomagnéticas
-- 🌍 Ajuda a prever impactos na Terra
+- Usa dados reais da NOAA
+- Aplica modelos matemáticos e IA
+- Detecta anomalias geomagnéticas
+- Prevê eventos futuros
 
-### 📊 Sobre o índice Kp:
-- 0 a 2 → Normal  
-- 3 a 4 → Atenção  
+📊 Índice Kp:
+- 0–2 → Normal  
+- 3–4 → Atenção  
 - 5+ → Tempestade solar  
 
-Esses eventos podem afetar:
-- 📡 Satélites  
-- 📶 Comunicação  
-- ⚡ Redes elétricas  
+Impactos:
+- GPS  
+- Internet  
+- Energia elétrica  
 """)
 
 # =========================
-# 💰 PREMIUM
+# PREMIUM
 # =========================
-st.subheader("💰 Recursos avançados")
+st.subheader("💰 Premium")
 
 if st.button("💎 Quero acesso premium"):
-    st.success("🚀 Em breve você terá acesso a previsões com IA!")
+    st.success("🚀 Em breve: IA avançada + alertas no celular")
