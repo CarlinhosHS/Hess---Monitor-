@@ -35,7 +35,6 @@ fig.update_layout(
     yaxis_title="Sinal",
 )
 
-df = get_data()
 
 # criar anomalias primeiro
 hess = df[df["x_t"] > 0.8]
@@ -47,7 +46,7 @@ col1, col2, col3 = st.columns(3)
 col1.metric("🔷 Anomalias HESS", len(hess))
 col2.metric("🤖 Anomalias IA", len(ia))
 col3.metric("📈 Último valor", round(df["x_t"].iloc[-1], 2))
-import plotly.express as px
+
 
 fig = px.line(df, x="tempo", y="x_t", title="Monitoramento em Tempo Real")
 
