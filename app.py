@@ -1,4 +1,4 @@
-import streamlit as st
+Oimport streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
@@ -35,15 +35,4 @@ fig = px.line(df, x="tempo", y="x_t", title="Monitoramento em Tempo Real")
 fig.add_scatter(x=hess["tempo"], y=hess["x_t"], mode='markers', name='HESS')
 fig.add_scatter(x=ia["tempo"], y=ia["x_t"], mode='markers', name='IA')
 
-st.plotly_chart(fig, use_container_width=True)
-
-X, y, scaler = preparar_dados(df)
-
-model = treinar_lstm(X, y)
-
-pred = prever(model, X, scaler)
-
-df = df.iloc[-len(pred):]
-df["previsao"] = pred
-
-ax.plot(df["tempo"], df["previsao"], label="Previsão IA", linestyle="--")
+st.plotly_chart(fig, use_container_width=True) 
