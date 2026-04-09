@@ -104,10 +104,11 @@ requirements.txt
 streamlit
 pandas
 numpy
+plotly
 matplotlib
 requests
 scikit-learn
-plotly
+
 lstm_model.py
 import streamlit as st
 import matplotlib.pyplot as plt
