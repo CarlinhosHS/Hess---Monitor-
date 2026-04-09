@@ -1,3 +1,12 @@
+import streamlit as st
+import pandas as pd
+import numpy as np
+import requests
+from datetime import datetime
+from statsmodels.tsa.holtwinters import SimpleExpSmoothing
+import plotly.express as px
+import sqlite3
+
 @st.cache_data(ttl=300)
 def get_location():
     import requests
@@ -8,16 +17,6 @@ def get_location():
     except:
         return "Desconhecido", "Desconhecido"
         
-import streamlit as st
-import pandas as pd
-import numpy as np
-import requests
-from datetime import datetime
-from statsmodels.tsa.holtwinters import SimpleExpSmoothing
-import plotly.express as px
-
-import sqlite3
-
 def criar_banco():
     conn = sqlite3.connect("usuarios.db")
     c = conn.cursor()
