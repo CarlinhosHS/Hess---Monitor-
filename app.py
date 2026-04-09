@@ -37,8 +37,6 @@ fig.add_scatter(x=ia["tempo"], y=ia["x_t"], mode='markers', name='IA')
 
 st.plotly_chart(fig, use_container_width=True)
 
-from lstm_model import preparar_dados, treinar_lstm, prever
-
 X, y, scaler = preparar_dados(df)
 
 model = treinar_lstm(X, y)
