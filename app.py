@@ -9,7 +9,7 @@ st.title("🚀 Monitor HESS")
 st.subheader("Monitoramento em Tempo Real")
 
 # dados simulados
-tempo = np.arange(0, 100)
+tempo = np.arange(0,900)
 dados = np.sin(tempo * 0.1)
 
 df = pd.DataFrame({
