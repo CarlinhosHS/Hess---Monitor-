@@ -5,7 +5,8 @@ import plotly.express as px
 
 st.set_page_config(page_title="HESS Monitor", layout="wide")
 
-st.title("🚀 HESS Monitor")
+st.title("🚀 Monitor HESS")
+st.subheader("Monitoramento em Tempo Real")
 
 # dados simulados
 tempo = np.arange(0, 100)
