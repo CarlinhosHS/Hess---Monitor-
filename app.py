@@ -3,8 +3,18 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 
-st.set_page_config(page_title="HESS Monitor", layout="wide")
+import streamlit as st
 
+st.set_page_config(
+    page_title="HESS Monitor",
+    layout="wide",
+    page_icon="🚀"
+)
+
+st.markdown("""
+# 🚀 HESS Monitor
+### 📊 Monitoramento Inteligente em Tempo Real
+""")
 st.title("🚀 Monitor HESS")
 st.subheader("Monitoramento em Tempo Real")
 
