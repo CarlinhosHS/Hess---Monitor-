@@ -1,3 +1,11 @@
+import streamlit as st
+import pandas as pd
+import numpy as np
+import requests
+from datetime import datetime
+from statsmodels.tsa.holtwinters import SimpleExpSmoothing
+import plotly.express as px
+
 @st.cache_data(ttl=300)
 def get_location():
     import requests
@@ -25,13 +33,6 @@ def criar_banco():
     conn.close()
 
 criar_banco()
-import streamlit as st
-import pandas as pd
-import numpy as np
-import requests
-from datetime import datetime
-from statsmodels.tsa.holtwinters import SimpleExpSmoothing
-import plotly.express as px
 
 # =========================
 # 🔐 SISTEMA DE LOGIN
