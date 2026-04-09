@@ -27,10 +27,13 @@ df = pd.DataFrame({
     "x_t": dados
 })
 
-fig.update_layout(template="plotly_dark",
+fig = px.line(df, x="tempo", y="x_t")
+fig.update_layout(
+    template="plotly_dark",
     title="📡 Monitoramento Inteligente",
     xaxis_title="Tempo",
-    yaxis_title="Sinal",)
+    yaxis_title="Sinal",
+)
 
 col1, col2, col3 = st.columns(3)
 
