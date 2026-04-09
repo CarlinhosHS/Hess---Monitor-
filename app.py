@@ -49,7 +49,7 @@ pred = prever(model, X, scaler)
 df = df.iloc[-len(pred):]
 df["previsao"] = pred
 ax.plot(df["tempo"], df["previsao"], label="Previsão IA", linestyle="--")
-├── data.py
+data.py
 import requests
 import pandas as pd
 
@@ -69,7 +69,7 @@ def get_data():
         "x_t": valores
     })
     return df
-├── hess.py
+hess.py
 import numpy as np
 
 def aplicar_hess(df):
@@ -92,7 +92,7 @@ def aplicar_hess(df):
     df["anomalia_hess"] = (df["delta_H"] > df["tau"]).astype(int)
 
     return df
-├── ai_model.py
+ai_model.py
 from sklearn.ensemble import IsolationForest
 
 def aplicar_ia(df):
@@ -102,7 +102,7 @@ def aplicar_ia(df):
     df["anomalia_ia"] = df["anomalia_ia"].apply(lambda x: 1 if x == -1 else 0)
 
     return df
-├── requirements.txt
+requirements.txt
 streamlit
 pandas
 numpy
@@ -110,7 +110,7 @@ matplotlib
 requests
 scikit-learn
 plotly
-├── lstm_model.py
+lstm_model.py
 import streamlit as st
 import matplotlib.pyplot as plt
 
