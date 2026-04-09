@@ -1,10 +1,3 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import requests
-from datetime import datetime
-from statsmodels.tsa.holtwinters import SimpleExpSmoothing
-import plotly.express as px
 
 @st.cache_data(ttl=300)
 def get_location():
@@ -15,6 +8,15 @@ def get_location():
         return data.get("city", "Desconhecido"), data.get("country_name", "Desconhecido")
     except:
         return "Desconhecido", "Desconhecido"
+        
+import streamlit as st
+import pandas as pd
+import numpy as np
+import requests
+from datetime import datetime
+from statsmodels.tsa.holtwinters import SimpleExpSmoothing
+import plotly.express as px
+
 import sqlite3
 
 def criar_banco():
@@ -191,7 +193,7 @@ class HessApp:
         self.data = DataLoader()
         self.ia = IA()
         self.dashboard = Dashboard()
-        self.geo = Geo()
+     
 
         if "tema" not in st.session_state:
             st.session_state.tema = "escuro"
