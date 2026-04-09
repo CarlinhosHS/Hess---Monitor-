@@ -1,3 +1,4 @@
+from ai_model import aplicar_ia
 import streamlit as st
 import pandas as pd
 import numpy as np
